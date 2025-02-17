@@ -1,5 +1,53 @@
 <?php
 session_start();
+require 'database_connection.php';
+
+$errors = [];
+
+if($_SERVER["REQUEST_METHOD"]=="POST"){
+    $username = trim($_POST["username"]);
+    $firstName = trim($_POST["firstName"]);
+    $lastName = trim($_POST["lastName"]);
+    $password = $_POST["password"];
+
+    if (empty($username) || empty($firstName) || empty($lastName) || empty($password)) {
+        $errors[] = "All fields are required.";
+    }
+    $check_user = $conn->prepare("SELECT username FROM USERS WHERE username = ?");
+    $check_user->bind_param("s", $username);
+    $check_user->execute();
+    $check_user->store_result();
+
+    if ($check_user->num_rows > 0) {
+        $errors[] = "Username already taken.";
+    }
+    $check_user->close();
+
+    if (empty($errors)) {
+        // Hash password for security
+        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+
+        // Insert user into database
+        $stmt = $conn->prepare("INSERT INTO USERS (username, first_name, last_name, password) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("ssss", $username, $firstName, $lastName, $hashed_password);
+
+        if ($stmt->execute()) {
+            $_SESSION["username"] = $username; // Store username for this session
+        
+            // Display a popup and redirect using JavaScript
+            echo "<script>
+                    alert('Registration successful! Redirecting to login page...');
+                    window.location.href = 'login.php';
+                  </script>";
+            exit();
+        } else {
+            $errors[] = "Registration failed. Please try again.";
+        }
+        $stmt->close();
+    }
+}
+
+
 ?>
 
 <!DOCTYPE html>
@@ -110,6 +158,6 @@ session_start();
         <input type="password" id="password" name="password" required><br>
         <input type="submit" value="Register">
     </form>
-    <p>Already have an account? <a href="loginPage.php">Login here</a>.</p>
+    <p>Already have an account? <a href="login.php">Login here</a>.</p>
 </body>
 </html>
