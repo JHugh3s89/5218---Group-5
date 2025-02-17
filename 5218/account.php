@@ -1,7 +1,7 @@
 <?php
 // Start session
 session_start();
-require 'database_connection.php';
+require 'database_connection.php'; // Ensure this file exists and connects to your MySQL
 
 // Check if the user is logged in
 if (!isset($_SESSION["username"])) {
@@ -9,11 +9,11 @@ if (!isset($_SESSION["username"])) {
     exit();
 }
 
-
+// Initialize variables
 $username = $_SESSION["username"];
 $first_name = $last_name = $new_password = $current_password = $new_username = "";
 
-
+// Fetch current user data from the database
 if ($_SERVER["REQUEST_METHOD"] == "GET") {
     $stmt = $conn->prepare("SELECT first_name, last_name FROM USERS WHERE username = ?");
     $stmt->bind_param("s", $username);
@@ -23,14 +23,16 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
     $stmt->close();
 }
 
-
 // Handle form submission for updating user details
+$success_message = $error_message = ""; // Initialize messages as empty
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Get form values
     $new_username = isset($_POST["new_username"]) ? trim($_POST["new_username"]) : "";
     $first_name = isset($_POST["first_name"]) ? trim($_POST["first_name"]) : "";
     $last_name = isset($_POST["last_name"]) ? trim($_POST["last_name"]) : "";
     $new_password = isset($_POST["new_password"]) ? $_POST["new_password"] : "";
-    $current_password = isset($_POST["current_password"]) ? $_POST["current_password"] : "";
+    $current_password = isset($_POST["current_password"]) ? $_POST["current_password"] : ""; // Ensure it's empty on page load
 
     // Validate and update the details
     if (empty($first_name) || empty($last_name)) {
@@ -41,6 +43,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if (empty($current_password)) {
                 $error_message = "You must provide your current password to update your details.";
             } else {
+                // Fetch the current password from the database to validate
                 $stmt = $conn->prepare("SELECT password FROM USERS WHERE username = ?");
                 $stmt->bind_param("s", $username);
                 $stmt->execute();
@@ -48,7 +51,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $stmt->fetch();
                 $stmt->close();
 
+                // Verify the current password
                 if (password_verify($current_password, $db_password)) {
+                    // Proceed with updates if current password is correct
+                    // Update password if new password is provided
                     if (!empty($new_password)) {
                         $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
 
@@ -69,6 +75,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         $success_message = "Account details updated successfully!";
                     }
 
+                    // Check if the user wants to update their username and make sure it's different
                     if (!empty($new_username) && $new_username !== $username) {
                         // Check if the new username is already taken
                         $stmt = $conn->prepare("SELECT username FROM USERS WHERE username = ?");
@@ -92,6 +99,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         }
                         $stmt->close();
                     } elseif ($new_username === $username) {
+                        $success_message = "Your username is the same as the current one, no update needed.";
                     }
                 } else {
                     $error_message = "Current password is incorrect.";
@@ -181,14 +189,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <body>
     <h1>Account Page</h1>
 
-    <!-- Display success or error messages -->
+    <!-- Display success or error messages only after POST request (form submission) -->
     <?php
-    if (isset($success_message)) {
-        echo "<p class='message'>$success_message</p>";
-    }
+    if ($_SERVER["REQUEST_METHOD"] == "POST") {
+        if (!empty($success_message)) {
+            echo "<p class='message'>$success_message</p>";
+        }
 
-    if (isset($error_message)) {
-        echo "<p class='error-message'>$error_message</p>";
+        if (!empty($error_message)) {
+            echo "<p class='error-message'>$error_message</p>";
+        }
     }
     ?>
 
@@ -196,7 +206,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <form action="account.php" method="post">
         <!-- New Username Field -->
         <label for="new_username">New Username:</label>
-        <input type="text" id="new_username" name="new_username" value="<?php echo htmlspecialchars($new_username ?: $username); ?>"><br>
+        <input type="text" id="new_username" name="new_username" value="<?php echo htmlspecialchars($new_username ?: $username); ?>" required><br>
 
         <label for="first_name">First Name:</label>
         <input type="text" id="first_name" name="first_name" value="<?php echo htmlspecialchars($first_name); ?>" required><br>
@@ -205,7 +215,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <input type="text" id="last_name" name="last_name" value="<?php echo htmlspecialchars($last_name); ?>" required><br>
 
         <label for="current_password">Current Password (required to update details):</label>
-        <input type="password" id="current_password" name="current_password" value=""><br>
+        <input type="password" id="current_password" name="current_password" required><br>
 
         <label for="new_password">New Password (Leave blank if not changing):</label>
         <input type="password" id="new_password" name="new_password"><br>
