@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home Page</title>
+    <title>Shopping Site - Home</title>
+    <link rel="stylesheet" href="style.css"> 
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -19,10 +20,14 @@
         }
 
         .header {
+            width: 100%;
             display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 30px;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 30px;
+            background-color: #333;
+            position: absolute;
+            top: 0;
         }
 
         .logo {
@@ -32,8 +37,13 @@
             border-radius: 50%;
         }
 
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
         button {
-            padding: 10px 20px;
+            padding: 10px 15px;
             border: none;
             border-radius: 5px;
             background-color: #007bff;
@@ -46,8 +56,22 @@
             background-color: #0056b3;
         }
 
+        .search-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .search-bar input {
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            width: 200px;
+        }
+
         .main-content {
             text-align: center;
+            margin-top: 80px;
         }
 
         .title {
@@ -57,16 +81,27 @@
     </style>
 </head>
 <body>
+
+    <!-- Header with Logo, Navigation Buttons, and Search Bar -->
     <div class="header">
         <div class="logo"></div>
-        <button class="account" onclick="goToAccount()">Account</button>
-        <button class="login" onclick="goToLogin()">Login</button>
-        <button class="register" onclick="goToRegister()">Register</button>
-    </div>
-    <div class="main-content">
-        <h1 class="title">Shopping Site</h1> 
+        <form class="search-bar" action="search.php" method="POST">
+            <input type="text" name="query" placeholder="Search products..." required>
+            <button type="submit">Search</button>
+        </form>
+        <div class="nav-buttons">
+            <button onclick="goToAccount()">Account</button>
+            <button onclick="goToLogin()">Login</button>
+            <button onclick="goToRegister()">Register</button>
+        </div>
     </div>
 
+    <!-- Main Content -->
+    <div class="main-content">
+        <h1 class="title">Welcome to Shopping Site</h1> 
+    </div>
+
+    <!-- JavaScript Navigation Functions -->
     <script>
         function goToAccount() {
             window.location.href = 'account.php';
@@ -80,5 +115,6 @@
             window.location.href = 'reg.php';
         }
     </script>
+
 </body>
 </html>
