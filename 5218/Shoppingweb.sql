@@ -24,3 +24,8 @@ CREATE TABLE REVIEWS (
     FOREIGN KEY (username) REFERENCES USERS(username) ON DELETE CASCADE,
     FOREIGN KEY (product_id) REFERENCES PRODUCTS(product_id) ON DELETE CASCADE
 );
+
+INSERT INTO PRODUCTS (product_id, product_name, price) VALUES
+(1, 'Headphones', 119.99),
+(2, 'Mouse', 49.99),
+(3, 'Mechanical Keyboard', 149.99);
