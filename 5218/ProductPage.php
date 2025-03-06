@@ -3,7 +3,7 @@
 $host = 'localhost'; // Change if your database is hosted elsewhere
 $dbname = 'Shoppingweb'; // Replace with your database name
 $username = 'root'; // Replace with your database username
-$password = '@ButterDood123'; // Replace with your database password
+$password = 'root'; // Replace with your database password
 
 // Create a connection
 $conn = new mysqli($host, $username, $password, $dbname);
