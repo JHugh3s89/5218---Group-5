@@ -4,15 +4,23 @@ require 'database_connection.php';
 
 $errors = [];
 
-if($_SERVER["REQUEST_METHOD"]=="POST"){
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = trim($_POST["username"]);
     $firstName = trim($_POST["firstName"]);
     $lastName = trim($_POST["lastName"]);
     $password = $_POST["password"];
 
+    // Password strength check (example, at least 8 characters, one uppercase, one digit, and one special character)
+    if (strlen($password) < 8 || !preg_match("/[A-Z]/", $password) || !preg_match("/\d/", $password) || !preg_match("/[\W_]/", $password)) {
+        $errors[] = "Password must be at least 8 characters long, contain one uppercase letter, one digit, and one special character.";
+    }
+
+    // Check if fields are empty
     if (empty($username) || empty($firstName) || empty($lastName) || empty($password)) {
         $errors[] = "All fields are required.";
     }
+
+    // Check if username already exists in the database
     $check_user = $conn->prepare("SELECT username FROM USERS WHERE username = ?");
     $check_user->bind_param("s", $username);
     $check_user->execute();
@@ -23,6 +31,7 @@ if($_SERVER["REQUEST_METHOD"]=="POST"){
     }
     $check_user->close();
 
+    // If no errors, proceed to insert the user into the database
     if (empty($errors)) {
         // Hash password for security
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
@@ -34,7 +43,7 @@ if($_SERVER["REQUEST_METHOD"]=="POST"){
         if ($stmt->execute()) {
             $_SESSION["username"] = $username; // Store username for this session
         
-            // Display a popup and redirect using JavaScript
+            // Display a popup and redirect
             echo "<script>
                     alert('Registration successful! Redirecting to login page...');
                     window.location.href = 'login.php';
@@ -46,8 +55,6 @@ if($_SERVER["REQUEST_METHOD"]=="POST"){
         $stmt->close();
     }
 }
-
-
 ?>
 
 <!DOCTYPE html>
@@ -59,8 +66,8 @@ if($_SERVER["REQUEST_METHOD"]=="POST"){
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #222;
-            color: #fff;
+            background-color: #222; /* Dark background */
+            color: #fff; /* Light text */
             margin: 0;
             padding: 0;
             display: flex;
@@ -71,20 +78,20 @@ if($_SERVER["REQUEST_METHOD"]=="POST"){
         }
 
         h2 {
-            color: #007bff;
+            color: #007bff; /* Blue header */
             margin-bottom: 20px;
         }
 
         form {
             width: 300px;
             padding: 20px;
-            background-color: #333;
+            background-color: #333; /* Dark form background */
             border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); /* Shadow */
         }
 
         label {
-            color: #fff;
+            color: #fff; /* White label text */
             display: block;
             margin-bottom: 8px;
         }
@@ -96,8 +103,8 @@ if($_SERVER["REQUEST_METHOD"]=="POST"){
             margin-bottom: 20px;
             border: none;
             border-radius: 5px;
-            background-color: #555;
-            color: #fff;
+            background-color: #555; /* Dark input background */
+            color: #fff; /* Light text */
         }
 
         input[type="submit"] {
@@ -105,44 +112,58 @@ if($_SERVER["REQUEST_METHOD"]=="POST"){
             padding: 10px;
             border: none;
             border-radius: 5px;
-            background-color: #007bff;
-            color: #fff;
+            background-color: #007bff; /* Blue button */
+            color: #fff; /* Light text */
             cursor: pointer;
         }
 
         input[type="submit"]:hover {
-            background-color: #0056b3;
+            background-color: #0056b3; /* Darker blue on hover */
         }
 
         p {
             text-align: center;
-            color: #aaa;
-            margin-top: 20px;
+            color: #aaa; /* Light gray text */
         }
 
         p a {
-            color: #007bff;
+            color: #007bff; /* Blue link */
             text-decoration: none;
         }
 
         p a:hover {
-            text-decoration: underline;
+            text-decoration: underline; /* Underline on hover */
         }
 
         .error-message {
             text-align: center;
-            color: #dc3545;
+            color: #dc3545; /* Red error message */
             margin-top: 20px;
+        }
+
+        .home-button {
+            margin-top: 20px;
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .home-button:hover {
+            background-color: #0056b3;
         }
     </style>
 </head>
 <body>
     <h2>User Registration</h2>
     <?php
+    // Display error message if any
     if (!empty($errors)) {
         echo "<p class='error-message'>";
         foreach ($errors as $error) {
-            echo "$error<br>";
+            echo htmlspecialchars($error) . "<br>";
         }
         echo "</p>";
     }
@@ -159,5 +180,10 @@ if($_SERVER["REQUEST_METHOD"]=="POST"){
         <input type="submit" value="Register">
     </form>
     <p>Already have an account? <a href="login.php">Login here</a>.</p>
+
+    <!-- Home Page Button -->
+    <a href="homePage.php">
+        <button class="home-button">Go to Home Page</button>
+    </a>
 </body>
 </html>
