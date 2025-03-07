@@ -1,3 +1,7 @@
+<?php
+session_start(); // Start the session to check if the user is logged in
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -90,9 +94,15 @@
             <button type="submit">Search</button>
         </form>
         <div class="nav-buttons">
-            <button onclick="goToAccount()">Account</button>
-            <button onclick="goToLogin()">Login</button>
-            <button onclick="goToRegister()">Register</button>
+            <?php if (isset($_SESSION['username'])): ?>
+                <!-- Show Account and Logout buttons if user is logged in -->
+                <button onclick="goToAccount()">Account</button>
+                <button onclick="goToLogout()">Logout</button>
+            <?php else: ?>
+                <!-- Show Register and Login buttons if user is not logged in -->
+                <button onclick="goToLogin()">Login</button>
+                <button onclick="goToRegister()">Register</button>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -103,10 +113,6 @@
 
     <!-- JavaScript Navigation Functions -->
     <script>
-        function goToAccount() {
-            window.location.href = 'account.php';
-        }
-
         function goToLogin() {
             window.location.href = 'login.php';
         }
@@ -114,7 +120,22 @@
         function goToRegister() {
             window.location.href = 'reg.php';
         }
+
+        function goToLogout() {
+            // Ask the user if they are sure they want to log out
+            const confirmLogout = confirm("Are you sure you want to log out?");
+            
+            if (confirmLogout) {
+                // Redirect to logout.php if confirmed
+                window.location.href = 'logout.php';
+            }
+        }
+
+        function goToAccount() {
+            window.location.href = 'account.php'; // Redirect to the account page
+        }
     </script>
 
 </body>
 </html>
+
