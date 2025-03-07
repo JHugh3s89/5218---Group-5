@@ -5,40 +5,55 @@ require 'database_connection.php';
 
 $error = ""; 
 
+// CSRF Token Check
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $username = trim($_POST["username"]);
-    $password = $_POST["password"];
-
-    if (empty($username) || empty($password)) {
-        $error = "Please fill in all fields.";
+    // Check for CSRF Token
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        $error = "Invalid CSRF token.";
     } else {
-        $stmt = $conn->prepare("SELECT username, password FROM USERS WHERE username = ?");
-        $stmt->bind_param("s", $username);
-        $stmt->execute();
-        $stmt->store_result();
+        // Get input data and sanitize
+        $username = trim($_POST["username"]);
+        $password = $_POST["password"];
 
-        if ($stmt->num_rows > 0) {
-            $stmt->bind_result($db_username, $db_password);
-            $stmt->fetch();
-
-            // Verify password
-            if (password_verify($password, $db_password)) {
-                $_SESSION["username"] = $db_username; // Store username in session
-                echo "<script>
-                        alert('Login successful! Redirecting to Home Page...');
-                        window.location.href = 'homePage.php';
-                      </script>";
-                exit();
-            } else {
-                $error = "Invalid username or password.";
-            }
+        // Validate input
+        if (empty($username) || empty($password)) {
+            $error = "Please fill in all fields.";
         } else {
-            $error = "User not found.";
+            // Prepared statement to prevent SQL injection
+            $stmt = $conn->prepare("SELECT username, password FROM USERS WHERE username = ?");
+            $stmt->bind_param("s", $username);
+            $stmt->execute();
+            $stmt->store_result();
+
+            if ($stmt->num_rows > 0) {
+                $stmt->bind_result($db_username, $db_password);
+                $stmt->fetch();
+
+                // Verify password
+                if (password_verify($password, $db_password)) {
+                    // Regenerate session ID to prevent session fixation
+                    session_regenerate_id(true);
+                    $_SESSION["username"] = $db_username; // Store username in session
+                    echo "<script>
+                            alert('Login successful! Redirecting to Home Page...');
+                            window.location.href = 'homePage.php';
+                          </script>";
+                    exit();
+                } else {
+                    $error = "Invalid username or password.";
+                }
+            } else {
+                $error = "User not found.";
+            }
+            $stmt->close();
         }
-        $stmt->close();
     }
 }
 
+// Generate CSRF Token for the form
+if (!isset($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
 ?>
 
 <!DOCTYPE html>
@@ -124,13 +139,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             color: #dc3545; /* Red error message */
             margin-top: 20px;
         }
+
+        .home-button {
+            margin-top: 20px;
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .home-button:hover {
+            background-color: #0056b3;
+        }
     </style>
 </head>
 <body>
     <h2>User Login</h2>
     <?php
     // Display error message if any
-    if (isset($error)) {
+    if (!empty($error)) {
         echo "<p class='error-message'>$error</p>";
     }
     ?>
@@ -139,8 +168,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <input type="text" id="username" name="username" required><br>
         <label for="password">Password:</label>
         <input type="password" id="password" name="password" required><br>
+        
+        <!-- CSRF Token -->
+        <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
+
         <input type="submit" value="Login">
     </form>
     <p>Don't have an account? <a href="reg.php">Register here</a>.</p>
+
+    <!-- Home Page Button -->
+    <a href="homePage.php">
+        <button class="home-button">Go to Home Page</button>
+    </a>
 </body>
 </html>
