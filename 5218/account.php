@@ -1,7 +1,6 @@
 <?php
-// Start session
 session_start();
-require 'database_connection.php'; // Ensure this file exists and connects to your MySQL
+require 'database_connection.php';
 
 // Check if the user is logged in
 if (!isset($_SESSION["username"])) {
@@ -24,15 +23,25 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
 }
 
 // Handle form submission for updating user details
-$success_message = $error_message = ""; // Initialize messages as empty
+$success_message = $error_message = ""; 
+
+// CSRF Token Handling
+if (!isset($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32)); // Generate a new CSRF token
+}
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Get form values
+    // Check CSRF token validity
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        die("CSRF token validation failed.");
+    }
+
+    // Get form values and sanitize
     $new_username = isset($_POST["new_username"]) ? trim($_POST["new_username"]) : "";
     $first_name = isset($_POST["first_name"]) ? trim($_POST["first_name"]) : "";
     $last_name = isset($_POST["last_name"]) ? trim($_POST["last_name"]) : "";
     $new_password = isset($_POST["new_password"]) ? $_POST["new_password"] : "";
-    $current_password = isset($_POST["current_password"]) ? $_POST["current_password"] : ""; // Ensure it's empty on page load
+    $current_password = isset($_POST["current_password"]) ? $_POST["current_password"] : "";
 
     // Validate and update the details
     if (empty($first_name) || empty($last_name)) {
@@ -184,6 +193,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             color: #dc3545; /* Red for error */
             margin-top: 20px;
         }
+
+        .nav-buttons {
+            margin-top: 20px;
+        }
+
+        .nav-buttons button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: #fff;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .nav-buttons button:hover {
+            background-color: #0056b3;
+        }
     </style>
 </head>
 <body>
@@ -220,7 +247,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <label for="new_password">New Password (Leave blank if not changing):</label>
         <input type="password" id="new_password" name="new_password"><br>
 
+        <!-- CSRF Token -->
+        <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
+
         <input type="submit" value="Update Account">
     </form>
+
+    <!-- Main Menu Button -->
+    <div class="nav-buttons">
+        <button onclick="window.location.href='homePage.php'">Main Menu</button>
+    </div>
 </body>
 </html>
