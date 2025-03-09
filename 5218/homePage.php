@@ -184,10 +184,11 @@ $result = $conn->query($sql);
     <!-- Header with Logo, Navigation Buttons, and Search Bar -->
     <div class="header">
         <div class="logo"></div>
-        <form class="search-bar" action="search.php" method="POST">
-            <input type="text" name="query" placeholder="Search products..." required>
-            <button type="submit">Search</button>
-        </form>
+<form class="search-bar" action="search.php" method="GET">
+    <input type="text" name="query" placeholder="Search products..." required>
+    <button type="submit">Search</button>
+</form>
+
         <div class="nav-buttons">
             <?php if (isset($_SESSION['username'])): ?>
                 <button onclick="goToAccount()">Account</button>
