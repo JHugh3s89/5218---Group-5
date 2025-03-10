@@ -1,5 +1,5 @@
 <?php
-session_start(); // Start the session to check if the user is logged in
+session_start();
 
 // Secure session settings
 session_set_cookie_params([
@@ -16,6 +16,11 @@ require_once 'database_connection.php';
 // Check for products in the database
 $sql = "SELECT product_id, product_name, description, price, image_url FROM PRODUCTS";
 $result = $conn->query($sql);
+
+// Generate CSRF token if not set
+if (!isset($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
 ?>
 
 <!DOCTYPE html>
@@ -184,10 +189,15 @@ $result = $conn->query($sql);
     <!-- Header with Logo, Navigation Buttons, and Search Bar -->
     <div class="header">
         <div class="logo"></div>
-<form class="search-bar" action="search.php" method="GET">
+
+        <!-- Secure Search Bar with CSRF Token -->
+<form class="search-bar" action="search.php" method="POST">
     <input type="text" name="query" placeholder="Search products..." required>
+    <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
     <button type="submit">Search</button>
 </form>
+
+ 
 
         <div class="nav-buttons">
             <?php if (isset($_SESSION['username'])): ?>
@@ -208,24 +218,30 @@ $result = $conn->query($sql);
 
     <!-- Product Display Section -->
     <div class="products-container">
-        <?php
-        if ($result->num_rows > 0) {
-            while ($row = $result->fetch_assoc()) {
-                echo '<div class="product-card">';
-                echo '<img src="' . htmlspecialchars($row["image_url"]) . '" alt="Product Image">';
-                echo '<h3>' . htmlspecialchars($row["product_name"]) . '</h3>';
-                echo '<p>' . htmlspecialchars($row["description"]) . '</p>';
-                echo '<div class="price">$' . number_format($row["price"], 2) . '</div>';
-                // Add the "View Product" button that links to product_page.php with the product ID
-                echo '<a href="product_page.php?id=' . $row["product_id"] . '"><button class="view-product-btn">View Product</button></a>';
-                echo '</div>';
-            }
-        } else {
-            echo "<p>No products available.</p>";
-        }
+    <?php
+if ($result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
         ?>
-    </div>
+        <div class="product-card">
+            <img src="<?php echo htmlspecialchars($row["image_url"]); ?>" alt="Product Image">
+            <h3><?php echo htmlspecialchars($row["product_name"]); ?></h3>
+            <p><?php echo htmlspecialchars($row["description"]); ?></p>
+            <div class="price">$<?php echo number_format($row["price"], 2); ?></div>
 
+            <!-- Secure POST Form for Viewing Product -->
+            <form action="product_page.php" method="POST">
+                <input type="hidden" name="id" value="<?php echo base64_encode($row["product_id"]); ?>">
+                <button type="submit" class="view-product-btn">View Product</button>
+            </form>
+        </div>
+        <?php
+    }
+} else {
+    echo "<p>No products available.</p>";
+}
+?>
+
+    </div>
 
     <!-- JavaScript Navigation Functions -->
     <script>
@@ -250,6 +266,11 @@ $result = $conn->query($sql);
     </script>
 </body>
 </html>
+
+<?php
+$conn->close(); // Close database connection
+?>
+
 
 <?php
 $conn->close(); // Close database connection
