@@ -2,34 +2,49 @@
 session_start();
 require 'database_connection.php';
 
-// Get the product ID from the URL
-$product_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-
-// Fetch product details from the database
-$product_query = $conn->prepare("SELECT * FROM PRODUCTS WHERE product_id = ?");
-$product_query->bind_param("i", $product_id);
-$product_query->execute();
-$product_result = $product_query->get_result();
-$product = $product_result->fetch_assoc();
-
-if (!$product) {
-    echo "Product not found.";
-    exit();
+// Ensure the request is POST 
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    die("Invalid request method.");
 }
 
-// Fetch reviews for the product
-$reviews_query = $conn->prepare("SELECT * FROM REVIEWS WHERE product_id = ?");
-$reviews_query->bind_param("i", $product_id);
-$reviews_query->execute();
-$reviews_result = $reviews_query->get_result();
+// Decode the product ID securely
+if (isset($_POST['id']) && !empty($_POST['id'])) {
+    $decoded_id = base64_decode($_POST['id'], true); // `true` ensures valid base64
 
-// Check if the user has already submitted a review for this product
-$user_review_query = $conn->prepare("SELECT * FROM REVIEWS WHERE product_id = ? AND username = ?");
-$user_review_query->bind_param("is", $product_id, $_SESSION['username']);
-$user_review_query->execute();
-$user_review_result = $user_review_query->get_result();
-$user_review = $user_review_result->fetch_assoc();
+if ($decoded_id === false || !is_numeric($decoded_id)) {
+    die("Invalid product ID. Possible data corruption.");
+}
+
+
+    // Fetch product details from the database
+    $product_query = $conn->prepare("SELECT * FROM PRODUCTS WHERE product_id = ?");
+    $product_query->bind_param("i", $decoded_id);
+    $product_query->execute();
+    $product_result = $product_query->get_result();
+    $product = $product_result->fetch_assoc();
+
+    if (!$product) {
+        echo "Product not found or unauthorized access.";
+        exit();
+    }
+
+    // Fetch reviews for the product
+    $reviews_query = $conn->prepare("SELECT * FROM REVIEWS WHERE product_id = ?");
+    $reviews_query->bind_param("i", $decoded_id);
+    $reviews_query->execute();
+    $reviews_result = $reviews_query->get_result();
+
+    // Check if the user has already submitted a review for this product
+    $user_review_query = $conn->prepare("SELECT * FROM REVIEWS WHERE product_id = ? AND username = ?");
+    $user_review_query->bind_param("is", $decoded_id, $_SESSION['username']);
+    $user_review_query->execute();
+    $user_review_result = $user_review_query->get_result();
+    $user_review = $user_review_result->fetch_assoc();
+} else {
+    die("Invalid request.");
+}
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
