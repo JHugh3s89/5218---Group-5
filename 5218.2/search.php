@@ -91,6 +91,6 @@ if (isset($_POST['query']) && !empty(trim($_POST['query']))) {
         echo "<p>Looks like we don’t have: " . $safe_search_term . "</p>";
     }
 } else {
-    echo "<p>Enter a search query.</p>";
+    echo "<p>Enter a search por favor.</p>";
 }
 ?>
