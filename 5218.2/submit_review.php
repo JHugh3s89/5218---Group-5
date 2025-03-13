@@ -18,11 +18,7 @@ $rating = isset($_POST['rating']) ? (int)$_POST['rating'] : 0;
 $review_text = isset($_POST['review_text']) ? $_POST['review_text'] : '';
 $image_data = null;
 
-// Debugging to check if the correct POST data is received
-//echo "<pre>";
-//echo "POST Data: \n";
-//var_dump($_POST); // Check the POST data being passed
-//echo "</pre>";
+
 
 // Check if the product_id exists in the PRODUCTS table
 $checkProductQuery = "SELECT COUNT(*) FROM PRODUCTS WHERE product_id = ?";
@@ -42,20 +38,12 @@ if ($product_exists == 0) {
 // Handle file upload (image)
 if (isset($_FILES['file']) && $_FILES['file']['error'] == 0) {
     // If there's a file uploaded, get the binary image data
-    echo "File uploaded: " . $_FILES['file']['name']; // Debug to check the file name
+    echo "File uploaded: " . $_FILES['file']['name']; // check the file name
     $image_data = file_get_contents($_FILES['file']['tmp_name']);
 } else {
-    echo "No image uploaded."; // Debugging if no file is uploaded
+    echo "No image uploaded."; //  if no file is uploaded
 }
 
-// Debugging the review data before insertion
-//echo "<pre>";
-//echo "Review Data: \n";
-//echo "Product ID: " . $product_id . "\n";
-//echo "Rating: " . $rating . "\n";
-//echo "Review Text: " . $review_text . "\n";
-//echo "Image Data: " . ($image_data ? 'Yes' : 'No') . "\n";
-//echo "</pre>";
 
 // Insert a new review
 $insert_query = "INSERT INTO REVIEWS (username, product_id, rating, review_text, image_data) VALUES (?, ?, ?, ?, ?)";
@@ -69,7 +57,7 @@ $stmt->bind_param("siiss", $_SESSION['username'], $product_id, $rating, $review_
 
 // Bind the BLOB separately if image data exists
 if ($image_data !== null) {
-    $stmt->send_long_data(4, $image_data); // Correct handling for binary data
+    $stmt->send_long_data(4, $image_data); // handling for binary data
 }
 
 // Execute the insert query
