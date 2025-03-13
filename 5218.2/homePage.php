@@ -1,6 +1,4 @@
 <?php
-session_start();
-
 // Secure session settings
 session_set_cookie_params([
     'lifetime' => 0,
@@ -10,10 +8,12 @@ session_set_cookie_params([
     'samesite' => 'Strict'
 ]);
 
-// Include the database connection file
+session_start();
+
+// Db connection file
 require_once 'database_connection.php'; 
 
-// Check for products in the database
+// Check for products in db
 $sql = "SELECT product_id, product_name, description, price, image_url FROM PRODUCTS";
 $result = $conn->query($sql);
 
@@ -197,8 +197,6 @@ if (!isset($_SESSION['csrf_token'])) {
     <button type="submit">Search</button>
 </form>
 
- 
-
         <div class="nav-buttons">
             <?php if (isset($_SESSION['username'])): ?>
                 <button onclick="goToAccount()">Account</button>
@@ -245,6 +243,15 @@ if ($result->num_rows > 0) {
 
     <!-- JavaScript Navigation Functions -->
     <script>
+        // Only allowed to redirect to these pages
+        const allowedPages = ["login.php", "reg.php", "logout.php", "account.php"];
+        function secureRedirect(destination) {
+            if (allowedPages.includes(destination)) {
+                window.location.href = destination;
+            } else {
+                alert("Invalid redirection attempt.");
+            }
+        }
         function goToLogin() {
             window.location.href = 'login.php';
         }
@@ -268,10 +275,6 @@ if ($result->num_rows > 0) {
 </html>
 
 <?php
-$conn->close(); // Close database connection
+$conn->close(); 
 ?>
 
-
-<?php
-$conn->close(); // Close database connection
-?>
