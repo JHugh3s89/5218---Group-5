@@ -1,7 +1,4 @@
 <?php
-// Start session
-session_start();
-
 // Secure session settings
 session_set_cookie_params([
     'lifetime' => 0,
@@ -11,6 +8,17 @@ session_set_cookie_params([
     'samesite' => 'Strict'
 ]);
 
+// Start session
+session_start();
+
+// Fix for failed_attempts not being intialized 
+if (!isset($_SESSION['failed_attempts'])) {
+    $_SESSION['failed_attempts'] = 0;
+}
+
+if (!isset($_SESSION['last_failed_attempt'])) {
+    $_SESSION['last_failed_attempt'] = 0;
+}
 require 'database_connection.php';
 
 $error = ""; 
