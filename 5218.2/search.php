@@ -15,6 +15,14 @@ if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST
 // Rate Limiting: Limit to 5 searches per minute
 if (!isset($_SESSION['search_attempts'])) {
     $_SESSION['search_attempts'] = 0;
+    $_SESSION['last_search_time'] = time(); // Set time when first search happens
+}
+if (time() - $_SESSION['last_search_time'] > 60) {
+    $_SESSION['search_attempts'] = 0;
+    $_SESSION['last_search_time'] = time(); 
+}
+if (!isset($_SESSION['search_attempts'])) {
+    $_SESSION['search_attempts'] = 0;
 }
 if ($_SESSION['search_attempts'] >= 5) {
     die("Too many search attempts, wait a bit before searching again.");
