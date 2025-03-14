@@ -1,0 +1,7 @@
+To run this wesite youll need apache and mysql running. then type http://localhost/FolderName/homePage.php into the url browser and the code should run with no errors with the database working however if a database error is flagged you may want to open the Shoppingweb.sql script into My SQL workbench and run the database make sure that the connection details are the same as in the database_connection.php file 
+$servername = "localhost";
+$username = "root";
+$password = "root";
+$dbname = "SHOPPINGWEB";
+Otherwise the database will not be able to connect properly
+For a review to be seen once made you will have to reload the product page or go back to the home page and click on the specific product again.
